@@ -6,6 +6,9 @@ import styles from "@/app/(auth)/login/doctor/page.module.css";
 import { useState } from "react";
 import Image from "next/image";
 import React from "react";
+import { toast } from "react-toastify";
+import API_URL from '@/public/config';
+
 
 export default function DoctorSignUp() {
   const [fullname, setFullName] = useState("");
@@ -16,6 +19,55 @@ export default function DoctorSignUp() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Form submitted:", { fullname, email, password });
+  };
+
+  // const { dispatch } = useContext(AuthContext);
+  // const location = useLocation();
+  // const data = location.state;
+
+  // const initialValues = {
+  //   name: data?.name ?? '',
+  //   gender: data?.gender ?? '',
+  //   phoneNumber: data?.phone ?? '',
+  //   city: data?.city ?? '',
+  //   age: data?.age ?? ''
+  // };
+
+  // const [values, setValues] = useState(initialValues);
+  // const handleChange = (e) => {
+  //   setValues({ ...values, [e.target.name]: e.target.value });
+  // };
+
+  // const handleLogout = (e) => {
+  //   e.preventDefault();
+  //   dispatch({ type: "LOGOUT", payload: null });
+  //   localStorage.removeItem("user");
+  //   navigate("/");
+  // }
+  const handleUserSignup = async () => {
+    const data = { ...values, uid: user.userId, userType: user.userType }
+    try {
+      const res = await fetch(`${API_URL}/api/user/signup/patient`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      const datas = await res.json();
+      if (!res.ok) {
+        toast.error("Error updating data")
+        return;
+      }
+      toast.success("Data updated, Please log in again");
+      dispatch({ type: "LOGOUT", payload: null });
+      localStorage.removeItem("user");
+      navigate("/");
+
+    } catch (error) {
+      toast.error("Network unavailable! Try again");
+      return;
+    }
   };
 
   return (

@@ -7,11 +7,16 @@ import { useState } from "react";
 import Image from "next/image";
 import React from "react";
 import { useRouter } from 'next/navigation';
+import { toast } from "react-toastify";
+import API_URL from '@/public/config';
+import { signInWithEmailAndPassword, setPersistence, browserSessionPersistence, signOut } from "firebase/auth";
+import { clientAuth } from '@/public/firebase';
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loginButtonDisable, setLoginButtonDisable] = useState(false);
   const router = useRouter();
 
   const handleSubmit = (e) => {
@@ -20,6 +25,81 @@ export default function LoginForm() {
     router.push('/authenticated/user');
   };
 
+  const handleLogin = async () => {
+    setLoginButtonDisable(true);
+    if (!email || !password) {
+      toast.warn("Enter all fields!");
+      setLoginButtonDisable(false);
+      return;
+    }
+    try {
+      const user = (await signInWithEmailAndPassword(clientAuth, email, password)).user;
+      await setPersistence(clientAuth, browserSessionPersistence);
+      const claims = (await user.getIdTokenResult()).claims;
+
+      if (!claims.email_verified) {
+        try {
+          const res = await fetch(`${API_URL}/api/resend-otp`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ token: await user.getIdToken() })
+          });
+          if (!res.ok) {
+            toast.error("Error sending email");
+            try{
+              await signOut(clientAuth);
+            }
+            catch(e){}
+            setLoginButtonDisable(false);
+            return;
+          }
+          toast.info("Please verify your email");
+          navigate("/verify-email");
+        } catch (e) {
+          toast.error("Network unavailable! Try again");
+          try{
+            await signOut(clientAuth);
+          }
+          catch(e){}
+          setLoginButtonDisable(false);
+          return;
+        }
+      }
+      else if (!claims.info || claims.info === null) {
+        toast.info("Please complete your profile");
+        navigate("/user-details");
+      } else {
+        toast.info(`Welcome ${user.displayName}`);
+        window.history.back();
+      }
+    }
+    catch (e) {
+      console.log(e);
+      const errorCode = e.code;
+      console.log(errorCode);
+      try {
+        await signOut(clientAuth);
+      }
+      catch (e) {
+        console.log(e);
+      }
+      // setLoginButtonDisable(false);
+      // if (errorCode === 'auth/invalid-email' || errorCode === 'auth/missing-email')
+      //   toast.error("Invalid email address");
+      // else if (errorCode === 'auth/wrong-password')
+      //   toast.error("Invalid credentials");
+      // else if (errorCode === 'auth/invalid-credential')
+      //   toast.error("Invalid credentials");
+      // else if (errorCode === 'auth/user-not-found')
+      //   toast.error("User not found");
+      // else if (errorCode.includes('auth/requests-from-referer'))
+      //   toast.error("Unauthorized access");
+      // else
+      //   toast.error("An error occurred while logging in");
+    }
+  };
   return (
     <div className={`${styles.customBackground} min-h-screen flex flex-col`}>
       <div className="relative flex flex-col min-h-screen lg:flex-row">
@@ -110,12 +190,21 @@ export default function LoginForm() {
                href= "./authenticated/user/page"
               type="submit"
               className="mt-6 sm:mt-8 w-full sm:w-auto mx-auto flex items-center justify-center bg-[#017BFC] text-white font-medium text-sm sm:text-base lg:text-lg py-2 px-6 sm:px-10 rounded-full hover:bg-blue-700 hover:scale-105 transition-all duration-200 ease-in-out"
+              onClick={handleLogin}
+              disabled={loginButtonDisable}
             >
-              Log in
+              {loginButtonDisable ? (
+                <i
+                  className="fa fa-spinner fa-spin border-1"
+                  style={{ fontSize: "2rem" }}
+                ></i>
+              ) : (
+                "Log In"
+              )}
             </button>
           </form>
           <p className="mt-4 sm:mt-6 text-gray-500 font-medium text-sm sm:text-base lg:text-lg text-center">
-            Don't have an Account?{" "}
+            Don`t have an Account?{" "}
             <Link
               href="/signup/user"
               className="text-[#017BFC] hover:text-blue-700 font-medium inline-block transition-transform duration-200 ease-in-out transform hover:scale-105"

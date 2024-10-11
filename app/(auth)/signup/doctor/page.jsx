@@ -6,12 +6,66 @@ import styles from "@/app/(auth)/login/doctor/page.module.css";
 import { useState } from "react";
 import Image from "next/image";
 import React from "react";
+import { toast } from "react-toastify";
+import API_URL from '@/public/config';
 
 export default function DoctorSignUp() {
   const [fullname, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+//   const location = useLocation();
+//   const data = location.state;
+//   const { dispatch } = useContext(AuthContext);
+
+//   const initialValues = {
+//     name: data?.name ?? '',
+//     gender: data?.gender ?? '',
+//     specializations: data?.specializations ?? '',
+//     phoneNumber: data?.phone ?? '',
+//     firm: data?.firm ?? '',
+//     city: data?.city ?? '',
+//     age: data?.age ?? ''
+//   };
+//   const [values, setValues] = useState(initialValues);
+//   const handleChange = (e) => {
+//     setValues({ ...values, [e.target.name]: e.target.value });
+//   };
+
+//   const handleLogout = (e) => {
+//     e.preventDefault();
+//     dispatch({ type: "LOGOUT", payload: null });
+//     localStorage.removeItem("user");
+//     navigate("/");
+// }
+
+
+const handleDocSignup = async () => {
+  try {
+    const data = { ...values, uid: user.userId, userType: user.userType }
+    const res = await fetch(`${API_URL}/api/user/signup/doctor`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    const datas = await res.json();
+    if (!res.ok) {
+      toast.error("Error updating data");
+      return;
+    }
+    toast.success("Data updated, Please log in again");
+    dispatch({ type: "LOGOUT", payload: null });
+    localStorage.removeItem("user");
+    navigate("/");
+
+  } catch (error) {
+    toast.error("Network unavailable! Try again");
+    return;
+  }
+};
 
   const handleSubmit = (e) => {
     e.preventDefault();
