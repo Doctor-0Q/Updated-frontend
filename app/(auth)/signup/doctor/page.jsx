@@ -9,6 +9,7 @@ import React from "react";
 import { toast } from "react-toastify";
 import API_URL from '@/public/config';
 
+
 export default function DoctorSignUp() {
   const [fullname, setFullName] = useState("");
   const [email, setEmail] = useState("");
