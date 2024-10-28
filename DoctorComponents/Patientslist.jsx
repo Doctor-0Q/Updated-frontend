@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect } from "react"; 
+import Link from "next/link";
 
 const patientsDashboard = () => {
   const [patients, setPatients] = useState([]);
@@ -147,7 +148,9 @@ const patientsDashboard = () => {
         </h2>
         <div className="md:mt-0 mt-4 md:mb-0 mb-4 flex space-x-4 mr-5">
           <button>
-          <img src="/doctor/plusicon.png" alt="Add Icon" className="" />
+            <Link href="/authenticated/doctor/add-patient">
+              <img src="/doctor/plusicon.png" alt="Add Icon" className="" />
+            </Link>
           </button>
           <button>
           <img src="/doctor/searchicon.png" alt="Search Icon" className="" />
